@@ -6,48 +6,39 @@
 <title>YAML Parser Differentials</title>
 <style>
 :root {
-  --bg: #0c0c0e;
-  --surface: rgba(255, 255, 255, 0.035);
-  --surface-hover: rgba(255, 255, 255, 0.055);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #d4d4d8;
-  --text-bright: #fafafa;
-  --text-dim: rgba(255, 255, 255, 0.8);
-  --text-dimmer: rgba(255, 255, 255, 0.5);
-  --blue: #60a5fa;
-  --link: #93c5fd;
-  --link-visited: #f0abfc;
-  --orange: #fb923c;
-  --green: #22c55e;
-  --yellow: #eab308;
-  --red: #ef4444;
+  --color-bg: #0c0c0e;
+  --color-white: 255 255 255;
+  --color-orange: 251 146 60;
+  --color-red: 239 68 68;
+  --color-yellow: 234 179 8;
+  --color-green: 34 197 94;
+  --color-blue: 96 165 250;
+  --color-surface: rgb(var(--color-white) / 0.04);
+  --color-surface-hover: rgb(var(--color-white) / 0.06);
+  --color-border: rgb(var(--color-white) / 0.1);
+  --color-text: #d4d4d8;
+  --color-text-bright: #fafafa;
+  --color-text-dim: rgb(var(--color-white) / 0.8);
+  --color-text-dimmer: rgb(var(--color-white) / 0.5);
   --mono: ui-monospace, "Cascadia Code", "Cascadia Mono", "Segoe UI Mono", "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
   --radius: 6px;
   --fs-title: 24px;
-  --fs-body: 16px;
   --fs-small: 15px;
-  --fs-xs: 14px;
-  --fs-xxs: 13px;
+  --fs-xs: 13px;
 }
 
 body {
   margin: 0;
   font-family: var(--mono);
-  font-size: var(--fs-body);
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-bg);
+  color: var(--color-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
-a {
-  color: var(--link);
-}
-
-a:visited {
-  color: var(--link-visited);
-}
+a { color: #93c5fd; }
+a:visited { color: #f0abfc; }
 
 .container {
   max-width: 1200px;
@@ -59,13 +50,13 @@ h1 {
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 700;
-  color: var(--text-bright);
+  color: var(--color-text-bright);
 }
 
 .subtitle {
   margin-top: 6px;
   font-size: var(--fs-small);
-  color: var(--text-dim);
+  color: var(--color-text-dim);
   margin-bottom: 24px;
 }
 
@@ -73,8 +64,8 @@ h1 {
   display: flex;
   gap: 2px;
   margin-bottom: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 3px;
   width: fit-content;
@@ -83,7 +74,7 @@ h1 {
 .view-btn {
   background: transparent;
   border: none;
-  color: var(--text-dim);
+  color: var(--color-text-dim);
   font-family: var(--mono);
   line-height: 1.2;
   font-size: var(--fs-small);
@@ -95,13 +86,13 @@ h1 {
 }
 
 .view-btn.active {
-  background: rgba(255,255,255,0.09);
-  color: var(--text-bright);
+  background: rgb(var(--color-white) / 0.1);
+  color: var(--color-text-bright);
 }
 
 .view-btn:hover:not(.active) {
-  color: var(--text);
-  background: rgba(255,255,255,0.04);
+  color: var(--color-text);
+  background: rgb(var(--color-white) / 0.04);
 }
 
 #matrix-view { overflow-x: auto; }
@@ -115,107 +106,69 @@ h1 {
 .matrix-table th, .pair-table th {
   text-align: left;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--color-text-dim);
   padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .matrix-table th.parser-col {
-  color: var(--blue);
-  font-size: var(--fs-xxs);
+  color: rgb(var(--color-blue));
+  font-size: var(--fs-xs);
   max-width: 140px;
 }
 
 .matrix-table td, .pair-table td {
   padding: 5px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgb(var(--color-white) / 0.04);
   vertical-align: middle;
 }
 
 .matrix-table td, .matrix-table th, .pair-table td, .pair-table th { white-space: nowrap; }
 
-.matrix-table tr:hover td, .pair-table tr:hover td { background: var(--surface-hover); }
+.matrix-table tr:hover td, .pair-table tr:hover td { background: var(--color-surface-hover); }
 
-.matrix-table tr.has-diff td { background: rgba(251,146,60,0.04); }
-.matrix-table tr.has-diff:hover td { background: rgba(251,146,60,0.08); }
+.matrix-table tr.has-diff td { background: rgb(var(--color-orange) / 0.04); }
+.matrix-table tr.has-diff:hover td { background: rgb(var(--color-orange) / 0.1); }
 
 td.test-name {
-  color: var(--text-dim);
-  font-size: var(--fs-xxs);
+  color: var(--color-text-dim);
+  font-size: var(--fs-xs);
   min-width: 200px;
 }
 
-td.test-name .num {
-  color: var(--text-dimmer);
-}
+td.test-name .num { color: var(--color-text-dimmer); }
 
 .badge {
   display: inline-block;
   padding: 1px 7px;
   border-radius: 3px;
-  font-size: var(--fs-xxs);
+  font-size: var(--fs-xs);
   font-weight: 500;
 }
 
-.badge-absent {
-  color: var(--text-dimmer);
-}
+.badge-absent { color: var(--color-text-dimmer); }
 
 .badge-parse-error {
-  background: rgba(239,68,68,0.15);
-  color: var(--red);
+  background: rgb(var(--color-red) / 0.15);
+  color: rgb(var(--color-red));
 }
 
 .badge-error {
-  background: rgba(185,28,28,0.2);
-  color: #fca5a5;
+  background: rgb(var(--color-red) / 0.2);
+  color: rgb(var(--color-red));
 }
 
 .badge-build-error,
 .badge-timeout {
-  background: rgba(234,179,8,0.15);
-  color: var(--yellow);
+  background: rgb(var(--color-yellow) / 0.15);
+  color: rgb(var(--color-yellow));
 }
 
-.badge-value {
-  color: var(--text-bright);
-}
+.badge-value { color: var(--color-text-bright); }
 
 .badge-diff {
-  background: rgba(34,197,94,0.12);
-  color: var(--green);
-}
-
-.legend {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--fs-xxs);
-  color: var(--text-dim);
-}
-
-.diff-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: rgba(251,146,60,0.4);
-  border: 1px solid rgba(251,146,60,0.6);
-}
-
-.same-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border);
+  background: rgb(var(--color-green) / 0.1);
+  color: rgb(var(--color-green));
 }
 
 #pair-view { display: none; }
@@ -228,12 +181,12 @@ td.test-name .num {
   flex-wrap: wrap;
 }
 
-.pair-controls label { font-size: var(--fs-small); color: var(--text-dim); }
+.pair-controls label { font-size: var(--fs-small); color: var(--color-text-dim); }
 
 .pair-controls select {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-bright);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-bright);
   font-family: var(--mono);
   font-size: var(--fs-small);
   padding: 5px 10px;
@@ -244,28 +197,26 @@ td.test-name .num {
 
 .pair-controls select:focus,
 .pair-controls select:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgb(var(--color-white) / 0.2);
 }
 
 .vs-sep {
-  color: var(--text-dimmer);
+  color: var(--color-text-dimmer);
   font-size: var(--fs-small);
 }
 
 .pair-count {
-  font-size: var(--fs-xxs);
-  color: var(--orange);
+  font-size: var(--fs-xs);
+  color: rgb(var(--color-orange));
   margin-left: auto;
 }
 
-.pair-table th.parser-name {
-  color: var(--blue);
-}
+.pair-table th.parser-name { color: var(--color-blue); }
 
 .no-diffs {
   text-align: center;
   padding: 40px;
-  color: var(--text-dimmer);
+  color: var(--color-text-dimmer);
   font-size: var(--fs-xs);
 }
 
@@ -273,27 +224,27 @@ td.test-name .num {
   text-align: center;
   padding: 60px 20px;
   font-size: var(--fs-xs);
-  color: var(--text-dim);
+  color: var(--color-text-dim);
 }
 
-.state-msg .err { color: var(--red); }
+.state-msg .err { color: var(--color-red); }
 
 .matrix-table tr.preview-active td {
-  background: rgba(96, 165, 250, 0.12);
+  background: rgb(var(--color-blue) / 0.1);
 }
 
 .test-preview {
   margin-top: 18px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--color-surface);
   overflow: hidden;
 }
 
 .test-preview-head {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-dim);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-dim);
   font-size: var(--fs-xs);
 }
 
@@ -304,12 +255,10 @@ td.test-name .num {
   overflow: auto;
   font-family: var(--mono);
   font-size: var(--fs-small);
-  color: var(--text-bright);
+  color: var(--color-text-bright);
 }
 
-.yaml-comment {
-  color: var(--text-dimmer);
-}
+.yaml-comment { color: var(--color-text-dimmer); }
 </style>
 </head>
 <body>
