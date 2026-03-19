@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run all YAML test cases against all parsers defined in parsers.json."""
+
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,7 +19,8 @@ def build_image(parser_id, parser_dir):
     print(f"  building {tag}...", flush=True)
     result = subprocess.run(
         ["docker", "build", "-t", tag, str(ROOT / parser_dir)],
-        capture_output=True, text=True
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
         print(f"  ERROR building {tag}:\n{result.stderr}", file=sys.stderr)
@@ -30,12 +31,18 @@ def build_image(parser_id, parser_dir):
 def run_test(image_tag, test_file, key="lang"):
     result = subprocess.run(
         [
-            "docker", "run", "--rm",
-            "-v", f"{ROOT / 'tests'}:/tests",
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            f"{ROOT / 'tests'}:/tests",
             image_tag,
-            f"/tests/{test_file}", key,
+            f"/tests/{test_file}",
+            key,
         ],
-        capture_output=True, text=True, timeout=30
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     output = result.stdout.strip()
     return output if output else "ERROR"

@@ -21,7 +21,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Println("PARSE_ERROR")

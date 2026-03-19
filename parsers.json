@@ -1,26 +1,26 @@
 {
-  "go/gopkg.in_yaml.3": {
+  "go/gopkg.in/yaml.v3": {
     "name": "Go yaml.v3",
     "language": "go",
     "package": "gopkg.in/yaml.v3",
-    "dir": "go/gopkg.in-yaml.3"
+    "dir": "go/gopkg.in/yaml.v3"
   },
-  "python/pyyaml.6": {
-    "name": "Python PyYAML 6",
+  "python/pyyaml": {
+    "name": "Python PyYAML 6.x",
     "language": "python",
     "package": "PyYAML",
-    "dir": "python/pyyaml.6"
+    "dir": "python/pyyaml"
   },
-  "ruby/psych.4": {
-    "name": "Ruby Psych 4",
+  "ruby/psych": {
+    "name": "Ruby Psych 4.x",
     "language": "ruby",
     "package": "psych (stdlib)",
-    "dir": "ruby/psych.4"
+    "dir": "ruby/psych"
   },
-  "node/js-yaml.4": {
-    "name": "Node.js js-yaml 4",
+  "node/js-yaml": {
+    "name": "Node.js js-yaml 4.x",
     "language": "javascript",
     "package": "js-yaml",
-    "dir": "node/js-yaml.4"
+    "dir": "node/js-yaml"
   }
 }
