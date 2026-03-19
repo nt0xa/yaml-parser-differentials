@@ -31,21 +31,20 @@ def build_image(parser_id, parser_dir):
 def run_test(image_tag, test_file, key="lang"):
     result = subprocess.run(
         [
-            "docker",
-            "run",
-            "--rm",
-            "-v",
-            f"{ROOT / 'tests'}:/tests",
+            "docker", "run", "--rm",
+            "-v", f"{ROOT / 'tests'}:/tests",
             image_tag,
-            f"/tests/{test_file}",
-            key,
+            f"/tests/{test_file}", key,
         ],
         capture_output=True,
         text=True,
         timeout=30,
     )
-    output = result.stdout.strip()
-    return output if output else "ERROR"
+    if result.returncode == 1:
+        raise RuntimeError(result.stderr.strip())
+    if result.returncode == 2:
+        return {"error": result.stderr.strip()}
+    return {"value": result.stdout.strip()}
 
 
 def main():
@@ -58,15 +57,17 @@ def main():
         print(f"\n[{parser_info['name']}]", flush=True)
         tag = build_image(parser_id, parser_info["dir"])
         if tag is None:
-            for tf in test_files:
-                results.setdefault(tf, {})[parser_id] = "BUILD_ERROR"
-            continue
+            sys.exit(1)
 
         for test_file in test_files:
             try:
                 value = run_test(tag, test_file)
             except subprocess.TimeoutExpired:
-                value = "TIMEOUT"
+                print(f"  FATAL {test_file}: timeout", file=sys.stderr)
+                sys.exit(1)
+            except RuntimeError as e:
+                print(f"  FATAL {test_file}: {e}", file=sys.stderr)
+                sys.exit(1)
             results.setdefault(test_file, {})[parser_id] = value
             print(f"  {test_file}: {value}", flush=True)
 
@@ -84,7 +85,14 @@ def main():
     for tf in test_files:
         row = f"{tf:<38}"
         for pid in parser_ids:
-            row += f"{results.get(tf, {}).get(pid, 'N/A'):<{col}}"
+            entry = results.get(tf, {}).get(pid)
+            if entry is None:
+                cell = "N/A"
+            elif "error" in entry:
+                cell = f"err: {entry['error'][:16]}"
+            else:
+                cell = entry["value"]
+            row += f"{cell:<{col}}"
         print(row)
 
 
