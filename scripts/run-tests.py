@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run all YAML test cases against all parsers defined in parsers.yaml."""
+"""Run all YAML test cases against all parsers defined in parsers.json."""
 import json
 import os
 import subprocess
@@ -10,9 +10,8 @@ ROOT = Path(__file__).parent.parent
 
 
 def load_parsers():
-    import yaml
-    with open(ROOT / "parsers.yaml") as f:
-        return yaml.safe_load(f)["parsers"]
+    with open(ROOT / "parsers.json") as f:
+        return json.load(f)
 
 
 def build_image(parser_id, parser_dir):

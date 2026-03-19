@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAML Parser Differentials</title>
+<style>
+:root {
+  --bg: #0c0c0e;
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-hover: rgba(255, 255, 255, 0.055);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #d4d4d8;
+  --text-bright: #fafafa;
+  --text-dim: rgba(255, 255, 255, 0.8);
+  --text-dimmer: rgba(255, 255, 255, 0.5);
+  --blue: #60a5fa;
+  --link: #93c5fd;
+  --link-visited: #f0abfc;
+  --orange: #fb923c;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --mono: ui-monospace, "Cascadia Code", "Cascadia Mono", "Segoe UI Mono", "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --radius: 6px;
+  --fs-title: 24px;
+  --fs-body: 16px;
+  --fs-small: 15px;
+  --fs-xs: 14px;
+  --fs-xxs: 13px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--link);
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.subtitle {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  width: fit-content;
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  line-height: 1.2;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-btn.active {
+  background: rgba(255,255,255,0.09);
+  color: var(--text-bright);
+}
+
+.view-btn:hover:not(.active) {
+  color: var(--text);
+  background: rgba(255,255,255,0.04);
+}
+
+#matrix-view { overflow-x: auto; }
+
+.matrix-table, .pair-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--fs-small);
+}
+
+.matrix-table th, .pair-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.matrix-table th.parser-col {
+  color: var(--blue);
+  font-size: var(--fs-xxs);
+  max-width: 140px;
+}
+
+.matrix-table td, .pair-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+
+.matrix-table td, .matrix-table th, .pair-table td, .pair-table th { white-space: nowrap; }
+
+.matrix-table tr:hover td, .pair-table tr:hover td { background: var(--surface-hover); }
+
+.matrix-table tr.has-diff td { background: rgba(251,146,60,0.04); }
+.matrix-table tr.has-diff:hover td { background: rgba(251,146,60,0.08); }
+
+td.test-name {
+  color: var(--text-dim);
+  font-size: var(--fs-xxs);
+  min-width: 200px;
+}
+
+td.test-name .num {
+  color: var(--text-dimmer);
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: var(--fs-xxs);
+  font-weight: 500;
+}
+
+.badge-absent {
+  color: var(--text-dimmer);
+}
+
+.badge-parse-error {
+  background: rgba(239,68,68,0.15);
+  color: var(--red);
+}
+
+.badge-error {
+  background: rgba(185,28,28,0.2);
+  color: #fca5a5;
+}
+
+.badge-build-error,
+.badge-timeout {
+  background: rgba(234,179,8,0.15);
+  color: var(--yellow);
+}
+
+.badge-value {
+  color: var(--text-bright);
+}
+
+.badge-diff {
+  background: rgba(34,197,94,0.12);
+  color: var(--green);
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xxs);
+  color: var(--text-dim);
+}
+
+.diff-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(251,146,60,0.4);
+  border: 1px solid rgba(251,146,60,0.6);
+}
+
+.same-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+}
+
+#pair-view { display: none; }
+
+.pair-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.pair-controls label { font-size: var(--fs-small); color: var(--text-dim); }
+
+.pair-controls select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  outline: none;
+  cursor: pointer;
+}
+
+.pair-controls select:focus,
+.pair-controls select:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.vs-sep {
+  color: var(--text-dimmer);
+  font-size: var(--fs-small);
+}
+
+.pair-count {
+  font-size: var(--fs-xxs);
+  color: var(--orange);
+  margin-left: auto;
+}
+
+.pair-table th.parser-name {
+  color: var(--blue);
+}
+
+.no-diffs {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-dimmer);
+  font-size: var(--fs-xs);
+}
+
+.state-msg {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+
+.state-msg .err { color: var(--red); }
+
+.matrix-table tr.preview-active td {
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.test-preview {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.test-preview-head {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.test-preview pre {
+  margin: 0;
+  padding: 12px;
+  max-height: 280px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  color: var(--text-bright);
+}
+
+.yaml-comment {
+  color: var(--text-dimmer);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>YAML Parser Differentials</h1>
+  <p class="subtitle">How different YAML parsers interpret the same input. Based on <a href="https://0day.click/parser-diff-talk-oc25/">Joern Schneeweisz</a> and <a href="https://gist.github.com/taramtrampam/fca4e599992909b48a3ba1ce69e215a2">taramtrampam</a> research.</p>
+
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-matrix" onclick="switchView('matrix')">Matrix</button>
+    <button class="view-btn" id="btn-pair" onclick="switchView('pair')">Pair Comparison</button>
+  </div>
+
+  <div id="matrix-view">
+    <div id="matrix-content"><div class="state-msg">Loading results...</div></div>
+    <div class="test-preview">
+      <div class="test-preview-head" id="test-preview-title">Hover or click a test row to preview the YAML file.</div>
+      <pre id="test-preview-content"></pre>
+    </div>
+  </div>
+
+  <div id="pair-view">
+    <div class="pair-controls">
+      <label>Parser A</label>
+      <select id="pair-a" onchange="renderPair()"></select>
+      <span class="vs-sep">vs</span>
+      <label>Parser B</label>
+      <select id="pair-b" onchange="renderPair()"></select>
+      <span class="pair-count" id="pair-count"></span>
+    </div>
+    <div id="pair-content"><div class="state-msg">Loading results...</div></div>
+  </div>
+</div>
+
+<script>
+let results = null;
+let parsers = null;
+let pinnedTest = null;
+let previewReqId = 0;
+const testCache = {};
+
+async function loadData() {
+  try {
+    const [rRes, pRes] = await Promise.all([
+      fetch('results.json'),
+      fetch('parsers.json'),
+    ]);
+    if (!rRes.ok) throw new Error(`results.json: ${rRes.status} ${rRes.statusText}`);
+    if (!pRes.ok) throw new Error(`parsers.json: ${pRes.status} ${pRes.statusText}`);
+    results = await rRes.json();
+    parsers = await pRes.json();
+  } catch (e) {
+    document.getElementById('matrix-content').innerHTML =
+      `<div class="state-msg"><span class="err">Failed to load data: ${e.message}</span><br><br>Serve this file from a local HTTP server or GitHub Pages.</div>`;
+    document.getElementById('pair-content').innerHTML = document.getElementById('matrix-content').innerHTML;
+    return;
+  }
+  populatePairSelects();
+  renderMatrix();
+  renderPair();
+}
+
+function parserName(id) {
+  return parsers[id]?.name ?? id;
+}
+
+function badge(value, isDiff) {
+  if (value === 'absent') return `<span class="badge badge-absent">absent</span>`;
+  if (value === 'PARSE_ERROR') return `<span class="badge badge-parse-error">PARSE_ERROR</span>`;
+  if (value === 'ERROR') return `<span class="badge badge-error">ERROR</span>`;
+  if (value === 'BUILD_ERROR') return `<span class="badge badge-build-error">BUILD_ERROR</span>`;
+  if (value === 'TIMEOUT') return `<span class="badge badge-timeout">TIMEOUT</span>`;
+  const cls = isDiff ? 'badge-diff' : 'badge-value';
+  return `<span class="badge ${cls}">${escHtml(String(value))}</span>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderYamlPreview(text) {
+  return text
+    .split('\n')
+    .map(line => /^\s*#/.test(line)
+      ? `<span class="yaml-comment">${escHtml(line)}</span>`
+      : escHtml(line))
+    .join('\n');
+}
+
+function testLabel(name) {
+  const m = name.match(/^(\d+)-(.+)\.yaml$/);
+  if (m) return `<span class="num">${m[1]}</span>  ${m[2].replace(/-/g,' ')}`;
+  return escHtml(name.replace(/\.yaml$/, ''));
+}
+
+function hasDiff(row) {
+  const vals = Object.values(row);
+  return vals.length > 1 && new Set(vals).size > 1;
+}
+
+function renderMatrix() {
+  const parserIds = Object.keys(parsers);
+  const testFiles = Object.keys(results).sort();
+
+  let html = `<table class="matrix-table"><thead><tr>
+    <th>test</th>
+    ${parserIds.map(id => `<th class="parser-col">${escHtml(parserName(id))}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  for (const tf of testFiles) {
+    const row = results[tf] ?? {};
+    const diff = hasDiff(row);
+    html += `<tr class="${diff ? 'has-diff' : ''}" data-test="${escHtml(tf)}">
+      <td class="test-name">${testLabel(tf)}</td>
+      ${parserIds.map(id => {
+        const v = row[id] ?? 'N/A';
+        const isUnique = diff && parserIds.filter(p => (row[p] ?? 'N/A') === v).length < parserIds.length;
+        return `<td>${badge(v, isUnique)}</td>`;
+      }).join('')}
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('matrix-content').innerHTML = html;
+  bindMatrixRows();
+}
+
+function bindMatrixRows() {
+  const rows = document.querySelectorAll('#matrix-content tbody tr');
+  for (const row of rows) {
+    const tf = row.dataset.test;
+    row.addEventListener('mouseenter', () => {
+      if (!pinnedTest) showTestPreview(tf, false);
+    });
+    row.addEventListener('mouseleave', () => {
+      if (!pinnedTest) clearTestPreview();
+    });
+    row.addEventListener('click', () => {
+      pinnedTest = tf;
+      showTestPreview(tf, true);
+    });
+  }
+}
+
+function setActiveMatrixRow(tf) {
+  const rows = document.querySelectorAll('#matrix-content tbody tr');
+  for (const row of rows) {
+    row.classList.toggle('preview-active', row.dataset.test === tf);
+  }
+}
+
+function clearTestPreview() {
+  document.getElementById('test-preview-title').textContent = 'Hover or click a test row to preview the YAML file.';
+  document.getElementById('test-preview-content').textContent = '';
+  setActiveMatrixRow(null);
+}
+
+async function showTestPreview(tf, isPinned) {
+  const reqId = ++previewReqId;
+  const title = document.getElementById('test-preview-title');
+  const content = document.getElementById('test-preview-content');
+  title.textContent = isPinned ? `${tf} (pinned)` : tf;
+  content.textContent = 'Loading...';
+  setActiveMatrixRow(tf);
+
+  if (testCache[tf] !== undefined) {
+    content.innerHTML = renderYamlPreview(testCache[tf]);
+    return;
+  }
+
+  try {
+    const res = await fetch(`tests/${tf}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const text = await res.text();
+    testCache[tf] = text;
+    if (reqId !== previewReqId) return;
+    content.innerHTML = renderYamlPreview(text);
+  } catch (e) {
+    if (reqId !== previewReqId) return;
+    content.textContent = `Failed to load tests/${tf}: ${e.message}`;
+  }
+}
+
+function populatePairSelects() {
+  const parserIds = Object.keys(parsers);
+  const opts = parserIds.map(id => `<option value="${escHtml(id)}">${escHtml(parserName(id))}</option>`).join('');
+  document.getElementById('pair-a').innerHTML = opts;
+  document.getElementById('pair-b').innerHTML = opts;
+  if (parserIds.length > 1) document.getElementById('pair-b').selectedIndex = 1;
+}
+
+function renderPair() {
+  if (!results || !parsers) return;
+  const a = document.getElementById('pair-a').value;
+  const b = document.getElementById('pair-b').value;
+
+  const testFiles = Object.keys(results).sort();
+  const diffs = testFiles.filter(tf => {
+    const row = results[tf] ?? {};
+    const va = row[a] ?? 'N/A';
+    const vb = row[b] ?? 'N/A';
+    return va !== vb;
+  });
+
+  document.getElementById('pair-count').textContent = diffs.length
+    ? `${diffs.length} difference${diffs.length !== 1 ? 's' : ''}`
+    : '';
+
+  if (a === b) {
+    document.getElementById('pair-content').innerHTML =
+      `<div class="no-diffs">Select two different parsers to compare.</div>`;
+    return;
+  }
+
+  if (diffs.length === 0) {
+    document.getElementById('pair-content').innerHTML =
+      `<div class="no-diffs">No differences between these two parsers.</div>`;
+    return;
+  }
+
+  let html = `<table class="pair-table"><thead><tr>
+    <th>test</th>
+    <th class="parser-name">${escHtml(parserName(a))}</th>
+    <th class="parser-name">${escHtml(parserName(b))}</th>
+  </tr></thead><tbody>`;
+
+  for (const tf of diffs) {
+    const row = results[tf] ?? {};
+    const va = row[a] ?? 'N/A';
+    const vb = row[b] ?? 'N/A';
+    html += `<tr>
+      <td class="test-name">${testLabel(tf)}</td>
+      <td>${badge(va, true)}</td>
+      <td>${badge(vb, true)}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('pair-content').innerHTML = html;
+}
+
+function switchView(v) {
+  document.getElementById('matrix-view').style.display = v === 'matrix' ? 'block' : 'none';
+  document.getElementById('pair-view').style.display = v === 'pair' ? 'block' : 'none';
+  document.getElementById('btn-matrix').classList.toggle('active', v === 'matrix');
+  document.getElementById('btn-pair').classList.toggle('active', v === 'pair');
+}
+
+loadData();
+</script>
+</body>
+</html>
