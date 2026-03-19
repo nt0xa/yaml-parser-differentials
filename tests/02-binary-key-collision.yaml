@@ -1,0 +1,4 @@
+# !!binary global tag on key — does base64 decode collide with "lang"?
+# "bGFuZw==" is base64 for "lang"
+lang: plain
+!!binary bGFuZw==: binary

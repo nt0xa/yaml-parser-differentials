@@ -1,0 +1,2 @@
+# !!merge tag — does it trigger merge behavior?
+!!merge x: {lang: merge_tag}

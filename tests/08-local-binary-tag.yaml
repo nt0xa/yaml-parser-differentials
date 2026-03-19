@@ -1,0 +1,4 @@
+# !binary local tag (single !) vs !!binary global tag (double !!)
+# "bGFuZw==" is base64 for "lang"
+lang: plain
+!binary bGFuZw==: local

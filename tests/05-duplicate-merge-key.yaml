@@ -1,0 +1,3 @@
+# Duplicate << merge key — distinct from regular duplicate keys
+<<: [{lang: first}]
+<<: [{lang: second}]
