@@ -3,22 +3,26 @@ require 'yaml'
 
 if ARGV.length != 2
   $stderr.puts "usage: yt <yaml-file> <key>"
-  puts "ERROR"
-  exit 0
+  exit 1
 end
 
 begin
-  data = YAML.safe_load(File.read(ARGV[0]))
-  key = ARGV[1]
-  if !data.is_a?(Hash) || !data.key?(key)
-    puts "absent"
-  else
-    puts data[key]
-  end
-rescue Psych::Exception => e
-  $stderr.puts e.message
-  puts "PARSE_ERROR"
+  raw = File.read(ARGV[0])
 rescue => e
   $stderr.puts e.message
-  puts "ERROR"
+  exit 1
+end
+
+begin
+  data = YAML.safe_load(raw)
+rescue => e
+  $stderr.puts e.message
+  exit 2
+end
+
+key = ARGV[1]
+if !data.is_a?(Hash) || !data.key?(key)
+  puts "absent"
+else
+  puts data[key]
 end

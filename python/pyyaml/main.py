@@ -6,19 +6,19 @@ import yaml
 def main():
     if len(sys.argv) != 3:
         print("usage: yt <yaml-file> <key>", file=sys.stderr)
-        print("ERROR")
-        sys.exit(0)
+        sys.exit(1)
 
     try:
-        data = yaml.safe_load(open(sys.argv[1], 'rb'))
-    except yaml.YAMLError as e:
-        print(e, file=sys.stderr)
-        print("PARSE_ERROR")
-        sys.exit(0)
+        raw = open(sys.argv[1], 'rb').read()
     except Exception as e:
         print(e, file=sys.stderr)
-        print("ERROR")
-        sys.exit(0)
+        sys.exit(1)
+
+    try:
+        data = yaml.safe_load(raw)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(2)
 
     key = sys.argv[2]
     if not isinstance(data, dict) or key not in data:
