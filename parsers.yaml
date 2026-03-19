@@ -1,0 +1,24 @@
+parsers:
+  go/gopkg.in_yaml.3:
+    name: "Go yaml.v3"
+    language: go
+    package: "gopkg.in/yaml.v3"
+    dir: go/gopkg.in-yaml.3
+
+  python/pyyaml.6:
+    name: "Python PyYAML 6"
+    language: python
+    package: "PyYAML"
+    dir: python/pyyaml.6
+
+  ruby/psych.4:
+    name: "Ruby Psych 4"
+    language: ruby
+    package: "psych (stdlib)"
+    dir: ruby/psych.4
+
+  node/js-yaml.4:
+    name: "Node.js js-yaml 4"
+    language: javascript
+    package: "js-yaml"
+    dir: node/js-yaml.4

@@ -1,0 +1,25 @@
+name: YAML Parser Differential Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-all-parsers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pyyaml (for runner script)
+        run: pip install pyyaml
+
+      - name: Run tests
+        run: python3 scripts/run-tests.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: results.json
