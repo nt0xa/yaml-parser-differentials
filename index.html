@@ -324,14 +324,21 @@ function parserName(id) {
   return parsers[id]?.name ?? id;
 }
 
-function badge(value, isDiff) {
-  if (value === 'absent') return `<span class="badge badge-absent">absent</span>`;
-  if (value === 'PARSE_ERROR') return `<span class="badge badge-parse-error">PARSE_ERROR</span>`;
-  if (value === 'ERROR') return `<span class="badge badge-error">ERROR</span>`;
-  if (value === 'BUILD_ERROR') return `<span class="badge badge-build-error">BUILD_ERROR</span>`;
-  if (value === 'TIMEOUT') return `<span class="badge badge-timeout">TIMEOUT</span>`;
+function entryKey(entry) {
+  if (!entry) return '\0absent';
+  if (entry.error !== undefined) return '\0err\0' + entry.error;
+  return entry.value ?? '';
+}
+
+function badge(entry, isDiff) {
+  if (!entry) return `<span class="badge badge-absent">absent</span>`;
+  if (entry.error !== undefined) {
+    return `<span class="badge badge-parse-error" title="${escHtml(entry.error)}">error</span>`;
+  }
+  const v = entry.value;
+  if (v === 'absent') return `<span class="badge badge-absent">absent</span>`;
   const cls = isDiff ? 'badge-diff' : 'badge-value';
-  return `<span class="badge ${cls}">${escHtml(String(value))}</span>`;
+  return `<span class="badge ${cls}">${escHtml(String(v))}</span>`;
 }
 
 function escHtml(s) {
@@ -354,8 +361,8 @@ function testLabel(name) {
 }
 
 function hasDiff(row) {
-  const vals = Object.values(row);
-  return vals.length > 1 && new Set(vals).size > 1;
+  const keys = Object.values(row).map(entryKey);
+  return keys.length > 1 && new Set(keys).size > 1;
 }
 
 function renderMatrix() {
@@ -373,9 +380,10 @@ function renderMatrix() {
     html += `<tr class="${diff ? 'has-diff' : ''}" data-test="${escHtml(tf)}">
       <td class="test-name">${testLabel(tf)}</td>
       ${parserIds.map(id => {
-        const v = row[id] ?? 'N/A';
-        const isUnique = diff && parserIds.filter(p => (row[p] ?? 'N/A') === v).length < parserIds.length;
-        return `<td>${badge(v, isUnique)}</td>`;
+        const entry = row[id];
+        const key = entryKey(entry);
+        const isUnique = diff && parserIds.filter(p => entryKey(row[p]) === key).length < parserIds.length;
+        return `<td>${badge(entry, isUnique)}</td>`;
       }).join('')}
     </tr>`;
   }
@@ -457,9 +465,7 @@ function renderPair() {
   const testFiles = Object.keys(results).sort();
   const diffs = testFiles.filter(tf => {
     const row = results[tf] ?? {};
-    const va = row[a] ?? 'N/A';
-    const vb = row[b] ?? 'N/A';
-    return va !== vb;
+    return entryKey(row[a]) !== entryKey(row[b]);
   });
 
   document.getElementById('pair-count').textContent = diffs.length
@@ -486,12 +492,10 @@ function renderPair() {
 
   for (const tf of diffs) {
     const row = results[tf] ?? {};
-    const va = row[a] ?? 'N/A';
-    const vb = row[b] ?? 'N/A';
     html += `<tr>
       <td class="test-name">${testLabel(tf)}</td>
-      <td>${badge(va, true)}</td>
-      <td>${badge(vb, true)}</td>
+      <td>${badge(row[a], true)}</td>
+      <td>${badge(row[b], true)}</td>
     </tr>`;
   }
 
