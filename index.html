@@ -10,11 +10,9 @@
   --color-white: 255 255 255;
   --color-orange: 251 146 60;
   --color-red: 239 68 68;
-  --color-yellow: 234 179 8;
   --color-green: 34 197 94;
   --color-blue: 96 165 250;
   --color-surface: rgb(var(--color-white) / 0.04);
-  --color-surface-hover: rgb(var(--color-white) / 0.06);
   --color-border: rgb(var(--color-white) / 0.1);
   --color-text: #d4d4d8;
   --color-text-bright: #fafafa;
@@ -60,50 +58,13 @@ h1 {
   margin-bottom: 24px;
 }
 
-.view-toggle {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 24px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 3px;
-  width: fit-content;
-}
-
-.view-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-dim);
-  font-family: var(--mono);
-  line-height: 1.2;
-  font-size: var(--fs-small);
-  font-weight: 500;
-  padding: 5px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.view-btn.active {
-  background: rgb(var(--color-white) / 0.1);
-  color: var(--color-text-bright);
-}
-
-.view-btn:hover:not(.active) {
-  color: var(--color-text);
-  background: rgb(var(--color-white) / 0.04);
-}
-
-#matrix-view { overflow-x: auto; }
-
-.matrix-table, .pair-table {
+.pair-table {
   border-collapse: collapse;
   width: 100%;
   font-size: var(--fs-small);
 }
 
-.matrix-table th, .pair-table th {
+.pair-table th {
   text-align: left;
   font-weight: 600;
   color: var(--color-text-dim);
@@ -111,24 +72,16 @@ h1 {
   border-bottom: 1px solid var(--color-border);
 }
 
-.matrix-table th.parser-col {
-  color: rgb(var(--color-blue));
-  font-size: var(--fs-xs);
-  max-width: 140px;
-}
-
-.matrix-table td, .pair-table td {
+.pair-table td {
   padding: 5px 10px;
   border-bottom: 1px solid rgb(var(--color-white) / 0.04);
   vertical-align: middle;
 }
 
-.matrix-table td, .matrix-table th, .pair-table td, .pair-table th { white-space: nowrap; }
+.pair-table td, .pair-table th { white-space: nowrap; }
 
-.matrix-table tr:hover td, .pair-table tr:hover td { background: var(--color-surface-hover); }
-
-.matrix-table tr.has-diff td { background: rgb(var(--color-orange) / 0.04); }
-.matrix-table tr.has-diff:hover td { background: rgb(var(--color-orange) / 0.1); }
+.pair-table tr:hover td { background: rgb(var(--color-white) / 0.06); }
+.pair-table tr.active td { background: rgb(var(--color-blue) / 0.1); }
 
 td.test-name {
   color: var(--color-text-dim);
@@ -153,25 +106,12 @@ td.test-name .num { color: var(--color-text-dimmer); }
   color: rgb(var(--color-red));
 }
 
-.badge-error {
-  background: rgb(var(--color-red) / 0.2);
-  color: rgb(var(--color-red));
-}
-
-.badge-build-error,
-.badge-timeout {
-  background: rgb(var(--color-yellow) / 0.15);
-  color: rgb(var(--color-yellow));
-}
-
 .badge-value { color: var(--color-text-bright); }
 
 .badge-diff {
   background: rgb(var(--color-green) / 0.1);
   color: rgb(var(--color-green));
 }
-
-#pair-view { display: none; }
 
 .pair-controls {
   display: flex;
@@ -227,11 +167,7 @@ td.test-name .num { color: var(--color-text-dimmer); }
   color: var(--color-text-dim);
 }
 
-.state-msg .err { color: var(--color-red); }
-
-.matrix-table tr.preview-active td {
-  background: rgb(var(--color-blue) / 0.1);
-}
+.state-msg .err { color: rgb(var(--color-red)); }
 
 .test-preview {
   margin-top: 18px;
@@ -253,7 +189,6 @@ td.test-name .num { color: var(--color-text-dimmer); }
   padding: 12px;
   max-height: 280px;
   overflow: auto;
-  font-family: var(--mono);
   font-size: var(--fs-small);
   color: var(--color-text-bright);
 }
@@ -266,38 +201,57 @@ td.test-name .num { color: var(--color-text-dimmer); }
   <h1>YAML Parser Differentials</h1>
   <p class="subtitle">How different YAML parsers interpret the same input. Based on <a href="https://0day.click/parser-diff-talk-oc25/">Joern Schneeweisz</a> and <a href="https://gist.github.com/taramtrampam/fca4e599992909b48a3ba1ce69e215a2">taramtrampam</a> research.</p>
 
-  <div class="view-toggle">
-    <button class="view-btn active" id="btn-matrix" onclick="switchView('matrix')">Matrix</button>
-    <button class="view-btn" id="btn-pair" onclick="switchView('pair')">Pair Comparison</button>
+  <div class="pair-controls">
+    <label for="pair-a">Parser A</label>
+    <select id="pair-a" onchange="renderPair()"></select>
+    <span class="vs-sep">vs</span>
+    <label for="pair-b">Parser B</label>
+    <select id="pair-b" onchange="renderPair()"></select>
+    <span class="pair-count" id="pair-count"></span>
+    <label><input type="checkbox" id="show-all" onchange="renderPair()"> show all</label>
   </div>
-
-  <div id="matrix-view">
-    <div id="matrix-content"><div class="state-msg">Loading results...</div></div>
-    <div class="test-preview">
-      <div class="test-preview-head" id="test-preview-title">Hover or click a test row to preview the YAML file.</div>
-      <pre id="test-preview-content"></pre>
-    </div>
-  </div>
-
-  <div id="pair-view">
-    <div class="pair-controls">
-      <label>Parser A</label>
-      <select id="pair-a" onchange="renderPair()"></select>
-      <span class="vs-sep">vs</span>
-      <label>Parser B</label>
-      <select id="pair-b" onchange="renderPair()"></select>
-      <span class="pair-count" id="pair-count"></span>
-    </div>
-    <div id="pair-content"><div class="state-msg">Loading results...</div></div>
+  <div id="pair-content"><div class="state-msg">Loading results...</div></div>
+  <div class="test-preview">
+    <div class="test-preview-head" id="test-preview-title">Hover a row to preview the YAML file.</div>
+    <pre id="test-preview-content"></pre>
   </div>
 </div>
+
+<template id="tpl-badge-absent"><span class="badge badge-absent">absent</span></template>
+<template id="tpl-badge-parse-error"><span class="badge badge-parse-error"></span></template>
+<template id="tpl-badge-value"><span class="badge badge-value"></span></template>
+<template id="tpl-badge-diff"><span class="badge badge-diff"></span></template>
+<template id="tpl-pair-table">
+  <table class="pair-table">
+    <thead><tr>
+      <th>test</th>
+      <th class="parser-name"></th>
+      <th class="parser-name"></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+</template>
+<template id="tpl-pair-row">
+  <tr>
+    <td class="test-name"></td>
+    <td></td>
+    <td></td>
+  </tr>
+</template>
+<template id="tpl-yaml-comment"><span class="yaml-comment"></span></template>
+<template id="tpl-no-diffs"><div class="no-diffs"></div></template>
+<template id="tpl-state-err"><div class="state-msg"><span class="err"></span><br><br>Serve this file from a local HTTP server or GitHub Pages.</div></template>
 
 <script>
 let results = null;
 let parsers = null;
-let pinnedTest = null;
-let previewReqId = 0;
 const testCache = {};
+let previewReqId = 0;
+let activeRow = null;
+
+function tpl(id) {
+  return document.getElementById(id).content.cloneNode(true);
+}
 
 async function loadData() {
   try {
@@ -310,204 +264,175 @@ async function loadData() {
     results = await rRes.json();
     parsers = await pRes.json();
   } catch (e) {
-    document.getElementById('matrix-content').innerHTML =
-      `<div class="state-msg"><span class="err">Failed to load data: ${e.message}</span><br><br>Serve this file from a local HTTP server or GitHub Pages.</div>`;
-    document.getElementById('pair-content').innerHTML = document.getElementById('matrix-content').innerHTML;
+    const frag = tpl('tpl-state-err');
+    frag.querySelector('.err').textContent = e.message;
+    document.getElementById('pair-content').replaceChildren(frag);
     return;
   }
   populatePairSelects();
-  renderMatrix();
   renderPair();
 }
 
-function parserName(id) {
-  return parsers[id]?.name ?? id;
-}
-
 function entryKey(entry) {
-  if (!entry) return '\0absent';
-  if (entry.error !== undefined) return '\0err\0' + entry.error;
+  if (!entry) return '';
+  if (entry.error !== undefined) return 'error';
   return entry.value ?? '';
 }
 
 function badge(entry, isDiff) {
-  if (!entry) return `<span class="badge badge-absent">absent</span>`;
+  if (!entry || entry.value === 'absent') return tpl('tpl-badge-absent');
   if (entry.error !== undefined) {
-    return `<span class="badge badge-parse-error" title="${escHtml(entry.error)}">error</span>`;
+    const frag = tpl('tpl-badge-parse-error');
+    const span = frag.querySelector('span');
+    span.title = entry.error;
+    span.textContent = 'error';
+    return frag;
   }
-  const v = entry.value;
-  if (v === 'absent') return `<span class="badge badge-absent">absent</span>`;
-  const cls = isDiff ? 'badge-diff' : 'badge-value';
-  return `<span class="badge ${cls}">${escHtml(String(v))}</span>`;
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderYamlPreview(text) {
-  return text
-    .split('\n')
-    .map(line => /^\s*#/.test(line)
-      ? `<span class="yaml-comment">${escHtml(line)}</span>`
-      : escHtml(line))
-    .join('\n');
+  const frag = tpl(isDiff ? 'tpl-badge-diff' : 'tpl-badge-value');
+  frag.querySelector('span').textContent = String(entry.value);
+  return frag;
 }
 
 function testLabel(name) {
   const m = name.match(/^(\d+)-(.+)\.yaml$/);
-  if (m) return `<span class="num">${m[1]}</span>  ${m[2].replace(/-/g,' ')}`;
-  return escHtml(name.replace(/\.yaml$/, ''));
-}
-
-function hasDiff(row) {
-  const keys = Object.values(row).map(entryKey);
-  return keys.length > 1 && new Set(keys).size > 1;
-}
-
-function renderMatrix() {
-  const parserIds = Object.keys(parsers);
-  const testFiles = Object.keys(results).sort();
-
-  let html = `<table class="matrix-table"><thead><tr>
-    <th>test</th>
-    ${parserIds.map(id => `<th class="parser-col">${escHtml(parserName(id))}</th>`).join('')}
-  </tr></thead><tbody>`;
-
-  for (const tf of testFiles) {
-    const row = results[tf] ?? {};
-    const diff = hasDiff(row);
-    html += `<tr class="${diff ? 'has-diff' : ''}" data-test="${escHtml(tf)}">
-      <td class="test-name">${testLabel(tf)}</td>
-      ${parserIds.map(id => {
-        const entry = row[id];
-        const key = entryKey(entry);
-        const isUnique = diff && parserIds.filter(p => entryKey(row[p]) === key).length < parserIds.length;
-        return `<td>${badge(entry, isUnique)}</td>`;
-      }).join('')}
-    </tr>`;
+  if (m) {
+    const frag = document.createDocumentFragment();
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = m[1];
+    frag.append(num, '  ' + m[2].replace(/-/g, ' '));
+    return frag;
   }
-
-  html += '</tbody></table>';
-  document.getElementById('matrix-content').innerHTML = html;
-  bindMatrixRows();
-}
-
-function bindMatrixRows() {
-  const rows = document.querySelectorAll('#matrix-content tbody tr');
-  for (const row of rows) {
-    const tf = row.dataset.test;
-    row.addEventListener('mouseenter', () => {
-      if (!pinnedTest) showTestPreview(tf, false);
-    });
-    row.addEventListener('mouseleave', () => {
-      if (!pinnedTest) clearTestPreview();
-    });
-    row.addEventListener('click', () => {
-      pinnedTest = tf;
-      showTestPreview(tf, true);
-    });
-  }
-}
-
-function setActiveMatrixRow(tf) {
-  const rows = document.querySelectorAll('#matrix-content tbody tr');
-  for (const row of rows) {
-    row.classList.toggle('preview-active', row.dataset.test === tf);
-  }
-}
-
-function clearTestPreview() {
-  document.getElementById('test-preview-title').textContent = 'Hover or click a test row to preview the YAML file.';
-  document.getElementById('test-preview-content').textContent = '';
-  setActiveMatrixRow(null);
-}
-
-async function showTestPreview(tf, isPinned) {
-  const reqId = ++previewReqId;
-  const title = document.getElementById('test-preview-title');
-  const content = document.getElementById('test-preview-content');
-  title.textContent = isPinned ? `${tf} (pinned)` : tf;
-  content.textContent = 'Loading...';
-  setActiveMatrixRow(tf);
-
-  if (testCache[tf] !== undefined) {
-    content.innerHTML = renderYamlPreview(testCache[tf]);
-    return;
-  }
-
-  try {
-    const res = await fetch(`tests/${tf}`);
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    const text = await res.text();
-    testCache[tf] = text;
-    if (reqId !== previewReqId) return;
-    content.innerHTML = renderYamlPreview(text);
-  } catch (e) {
-    if (reqId !== previewReqId) return;
-    content.textContent = `Failed to load tests/${tf}: ${e.message}`;
-  }
+  return document.createTextNode(name.replace(/\.yaml$/, ''));
 }
 
 function populatePairSelects() {
   const parserIds = Object.keys(parsers);
-  const opts = parserIds.map(id => `<option value="${escHtml(id)}">${escHtml(parserName(id))}</option>`).join('');
-  document.getElementById('pair-a').innerHTML = opts;
-  document.getElementById('pair-b').innerHTML = opts;
-  if (parserIds.length > 1) document.getElementById('pair-b').selectedIndex = 1;
+  const selectA = document.getElementById('pair-a');
+  const selectB = document.getElementById('pair-b');
+  for (const id of parserIds) {
+    const opt = new Option(parsers[id].name, id);
+    selectA.add(opt.cloneNode(true));
+    selectB.add(opt);
+  }
+  if (parserIds.length > 1) selectB.selectedIndex = 1;
 }
 
 function renderPair() {
   if (!results || !parsers) return;
   const a = document.getElementById('pair-a').value;
   const b = document.getElementById('pair-b').value;
+  const container = document.getElementById('pair-content');
 
+  const showAll = document.getElementById('show-all').checked;
   const testFiles = Object.keys(results).sort();
-  const diffs = testFiles.filter(tf => {
-    const row = results[tf] ?? {};
-    return entryKey(row[a]) !== entryKey(row[b]);
-  });
 
-  document.getElementById('pair-count').textContent = diffs.length
-    ? `${diffs.length} difference${diffs.length !== 1 ? 's' : ''}`
-    : '';
+  const isDiffRow = tf => {
+    const row = results[tf] ?? {};
+    const ea = row[a], eb = row[b];
+    if ((ea?.error !== undefined) || (eb?.error !== undefined)) return false;
+    return entryKey(ea) !== entryKey(eb);
+  };
+
+  const rows = showAll ? testFiles : testFiles.filter(isDiffRow);
+  const diffCount = showAll ? testFiles.filter(isDiffRow).length : rows.length;
+
+  document.getElementById('pair-count').textContent =
+    showAll ? `${diffCount} / ${rows.length} differ` :
+    diffCount ? `${diffCount} difference${diffCount !== 1 ? 's' : ''}` : '';
 
   if (a === b) {
-    document.getElementById('pair-content').innerHTML =
-      `<div class="no-diffs">Select two different parsers to compare.</div>`;
+    const frag = tpl('tpl-no-diffs');
+    frag.querySelector('div').textContent = 'Select two different parsers to compare.';
+    container.replaceChildren(frag);
     return;
   }
 
-  if (diffs.length === 0) {
-    document.getElementById('pair-content').innerHTML =
-      `<div class="no-diffs">No differences between these two parsers.</div>`;
+  if (rows.length === 0) {
+    const frag = tpl('tpl-no-diffs');
+    frag.querySelector('div').textContent = 'No differences between these two parsers.';
+    container.replaceChildren(frag);
     return;
   }
 
-  let html = `<table class="pair-table"><thead><tr>
-    <th>test</th>
-    <th class="parser-name">${escHtml(parserName(a))}</th>
-    <th class="parser-name">${escHtml(parserName(b))}</th>
-  </tr></thead><tbody>`;
+  const tableFrag = tpl('tpl-pair-table');
+  const [thA, thB] = tableFrag.querySelectorAll('th.parser-name');
+  thA.textContent = parsers[a].name;
+  thB.textContent = parsers[b].name;
 
-  for (const tf of diffs) {
+  const tbody = tableFrag.querySelector('tbody');
+  for (const tf of rows) {
     const row = results[tf] ?? {};
-    html += `<tr>
-      <td class="test-name">${testLabel(tf)}</td>
-      <td>${badge(row[a], true)}</td>
-      <td>${badge(row[b], true)}</td>
-    </tr>`;
+    const isDiff = entryKey(row[a]) !== entryKey(row[b]);
+    const rowFrag = tpl('tpl-pair-row');
+    const tr = rowFrag.querySelector('tr');
+    const [tdName, tdA, tdB] = rowFrag.querySelectorAll('td');
+    tdName.appendChild(testLabel(tf));
+    tdA.appendChild(badge(row[a], isDiff));
+    tdB.appendChild(badge(row[b], isDiff));
+    tr.addEventListener('click', () => {
+      if (activeRow === tr) {
+        activeRow.classList.remove('active');
+        activeRow = null;
+        clearTestPreview();
+      } else {
+        if (activeRow) activeRow.classList.remove('active');
+        activeRow = tr;
+        tr.classList.add('active');
+        showTestPreview(tf);
+      }
+    });
+    tbody.appendChild(rowFrag);
   }
 
-  html += '</tbody></table>';
-  document.getElementById('pair-content').innerHTML = html;
+  activeRow = null;
+  clearTestPreview();
+  container.replaceChildren(tableFrag);
 }
 
-function switchView(v) {
-  document.getElementById('matrix-view').style.display = v === 'matrix' ? 'block' : 'none';
-  document.getElementById('pair-view').style.display = v === 'pair' ? 'block' : 'none';
-  document.getElementById('btn-matrix').classList.toggle('active', v === 'matrix');
-  document.getElementById('btn-pair').classList.toggle('active', v === 'pair');
+function clearTestPreview() {
+  document.getElementById('test-preview-title').textContent = 'Hover a row to preview the YAML file.';
+  document.getElementById('test-preview-content').replaceChildren();
+}
+
+function renderYamlPreview(text) {
+  const frag = document.createDocumentFragment();
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (i > 0) frag.appendChild(document.createTextNode('\n'));
+    const line = lines[i];
+    if (/^\s*#/.test(line)) {
+      const f = tpl('tpl-yaml-comment');
+      f.querySelector('span').textContent = line;
+      frag.appendChild(f);
+    } else {
+      frag.appendChild(document.createTextNode(line));
+    }
+  }
+  return frag;
+}
+
+async function showTestPreview(tf) {
+  const reqId = ++previewReqId;
+  const title = document.getElementById('test-preview-title');
+  const content = document.getElementById('test-preview-content');
+  title.textContent = tf;
+  if (testCache[tf] !== undefined) {
+    content.replaceChildren(renderYamlPreview(testCache[tf]));
+    return;
+  }
+  content.textContent = 'Loading...';
+  try {
+    const res = await fetch(`tests/${tf}`);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const text = await res.text();
+    testCache[tf] = text;
+    if (reqId !== previewReqId) return;
+    content.replaceChildren(renderYamlPreview(text));
+  } catch (e) {
+    if (reqId !== previewReqId) return;
+    content.textContent = `Failed to load tests/${tf}: ${e.message}`;
+  }
 }
 
 loadData();
