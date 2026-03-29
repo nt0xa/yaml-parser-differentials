@@ -26,11 +26,14 @@ main {
 }
 
 select {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-bright);
   font-family: var(--font-mono);
-  padding: 0.25rem 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text-bright);
+  border: 1px solid var(--color-border);
+}
+
+#controls select {
+  padding: 0.25rem;
   border-radius: var(--radius);
 }
 
@@ -41,16 +44,22 @@ select {
   padding-block: clamp(1rem, 3vw, 2rem);
 }
 
-#tests {
-  width: 100%;
-  padding: 0.25rem;
-  overflow: auto;
-}
-
 #previews {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  #previews {
+    grid-template-columns: 1fr;
+  }
 }
 
 .preview {
@@ -60,9 +69,8 @@ select {
   min-height: 15rem;
 }
 
-.preview h2 {
+.preview .title {
   margin: 0 0 0.5rem;
-  font-size: 0.9rem;
 }
 
 .preview pre {
@@ -85,14 +93,3 @@ select {
   color: var(--color-error);
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 700px) {
-  #previews {
-    grid-template-columns: 1fr;
-  }
-}

@@ -7,17 +7,17 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
+  <main>
     <header>
       <h1>YAML Parser Differentials</h1>
-      <p class="subtitle">
+      <p>
           A comparison of how different YAML parsers interpret the same input.
           Based on <a href="https://0day.click/parser-diff-talk-oc25/">Joern Schneeweisz</a> and
           <a href="https://gist.github.com/taramtrampam/fca4e599992909b48a3ba1ce69e215a2">taramtrampam</a> research.
       </p>
     </header>
 
-    <form class="controls">
+    <form id="controls">
       <fieldset>
         <legend>Compare parsers</legend>
 
@@ -36,11 +36,11 @@
       <select id="tests"></select>
       <div id="previews">
         <article class="preview">
-          <h2 id="preview-a-title">Parser A</h2>
+          <div class="title" id="preview-a-title">Parser A</div>
           <pre id="preview-a-content"></pre>
         </article>
         <article class="preview">
-          <h2 id="preview-b-title">Parser B</h2>
+          <div class="title" id="preview-b-title">Parser B</div>
           <pre id="preview-b-content"></pre>
         </article>
       </div>
