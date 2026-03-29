@@ -75,7 +75,7 @@ select {
   opacity: 0.45;
 }
 
-.preview-line.result {
+.preview-line.active {
   opacity: 1;
   color: var(--color-text-bright);
 }

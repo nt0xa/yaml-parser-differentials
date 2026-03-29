@@ -36,20 +36,20 @@ function escapeHtml(value) {
 }
 
 function formatPreview(testContent, result) {
-  const lines = testContent.replace(/\n$/, "").split("\n");
-  const previewLines = lines.map(function(line) {
-    return '<span class="preview-line">' + escapeHtml(line) + '</span>';
-  });
-
   if (result && result.error) {
     const errorLines = result.error.split("\n").map(function(line) {
       return '<span class="preview-line error">' + escapeHtml(line) + '</span>';
     });
-    previewLines.push(...errorLines);
-  } else {
-    const value = result && result.value !== undefined ? String(result.value) : "";
-    previewLines.push('<span class="preview-line result">result: ' + escapeHtml(value) + '</span>');
+    return errorLines.join("\n");
   }
+
+  const lines = testContent.replace(/\n$/, "").split("\n");
+  const previewLines = lines.map(line => {
+    if (result && result.value && line.includes(result.value)) {
+      return '<span class="preview-line active">' + escapeHtml(line) + '</span>';
+    }
+    return '<span class="preview-line">' + escapeHtml(line) + '</span>';
+  });
 
   return previewLines.join("\n");
 }
