@@ -27,7 +27,7 @@ func main() {
 
 	v, ok := data[os.Args[2]]
 	if !ok {
-		fmt.Println("absent")
+		fmt.Println("<nil>")
 		os.Exit(0)
 	}
 

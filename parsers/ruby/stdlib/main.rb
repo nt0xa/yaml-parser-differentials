@@ -22,7 +22,7 @@ end
 
 key = ARGV[1]
 if !data.is_a?(Hash) || !data.key?(key)
-  puts "absent"
+  puts "<nil>"
 else
   puts data[key]
 end

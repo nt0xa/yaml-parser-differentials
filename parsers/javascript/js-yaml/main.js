@@ -25,7 +25,7 @@ try {
 
 const key = process.argv[3];
 if (data === null || data === undefined || typeof data !== 'object' || !(key in data)) {
-  console.log('absent');
+  console.log('<nil>');
 } else {
   console.log(data[key]);
 }

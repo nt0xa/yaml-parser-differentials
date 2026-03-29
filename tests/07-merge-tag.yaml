@@ -1,3 +1,2 @@
-# !!merge tag — does it trigger merge behavior?
-lang: plain
-!!merge x: {lang: merge_tag}
+key: plain
+!!merge x: {key: merge}

@@ -9,7 +9,7 @@ def main():
         sys.exit(1)
 
     try:
-        raw = open(sys.argv[1], 'rb').read()
+        raw = open(sys.argv[1], "rb").read()
     except Exception as e:
         print(e, file=sys.stderr)
         sys.exit(1)
@@ -22,7 +22,7 @@ def main():
 
     key = sys.argv[2]
     if not isinstance(data, dict) or key not in data:
-        print("absent")
+        print("<nil>")
     else:
         print(data[key])
 

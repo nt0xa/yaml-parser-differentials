@@ -1,3 +1,2 @@
-# Duplicate key policy
-lang: first
-lang: last
+key: first
+key: last

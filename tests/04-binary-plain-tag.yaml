@@ -1,4 +1,2 @@
-# !!binary tag on non-base64 value "lang" as key
-# "lang" as base64 decodes to garbage bytes (0x95 0xA9 0xE0)
-!!binary lang: tagged
-lang: plain
+!!binary key: tagged
+key: plain

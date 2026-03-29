@@ -1,3 +1,2 @@
-# Merge key << — does it override an existing explicit key?
-lang: plain
-<<: [{lang: merge}]
+key: plain
+<<: [{key: merge}]
