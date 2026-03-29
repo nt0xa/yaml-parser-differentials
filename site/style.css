@@ -65,22 +65,24 @@ select {
 .preview {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.75rem;
   min-height: 15rem;
 }
 
 .preview .title {
-  margin: 0 0 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem;
 }
 
 .preview pre {
+  padding: 0.75rem;
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  line-height: 1.5;
 }
 
 .preview-line {
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .preview-line.active {
