@@ -27,23 +27,24 @@
         <label for="parser-b">Parser B</label>
         <select id="parser-b"></select>
 
-        <span class="count" id="count"></span>
-
         <input type="checkbox" id="show-all">
         <label for="show-all">Show all</label>
       </fieldset>
     </form>
 
-    <section id="content">
-      <div id="message">Loading results...</div>
-    </section>
-
-    <aside class="preview">
-      <div id="preview-title">
-        Select a row to preview the YAML file.
+    <section id="content" class="layout">
+      <select id="tests"></select>
+      <div id="previews">
+        <article class="preview">
+          <h2 id="preview-a-title">Parser A</h2>
+          <pre id="preview-a-content"></pre>
+        </article>
+        <article class="preview">
+          <h2 id="preview-b-title">Parser B</h2>
+          <pre id="preview-b-content"></pre>
+        </article>
       </div>
-      <pre id="preview-content"></pre>
-    </aside>
+    </section>
   </main>
   <script src="script.js"></script>
 </body>

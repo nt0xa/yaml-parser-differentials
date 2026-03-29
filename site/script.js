@@ -1,98 +1,168 @@
-function setError(message) {
-  let div = document.createElement("div");
-  div.textContent = message;
-  document.getElementById("content").replaceChildren(div);
+function setMessage(message) {
+  const tests = document.getElementById("tests");
+  tests.innerHTML = "";
+  tests.add(new Option(message, ""));
+  tests.disabled = true;
+  tests.size = 1;
+  document.getElementById("preview-a-content").textContent = "";
+  document.getElementById("preview-b-content").textContent = "";
 }
 
 async function loadResults() {
-  let response = await fetch("results.json");
+  const response = await fetch("results.json");
   return await response.json();
 }
 
 function populateSelectOptions(parsers, selectA, selectB) {
   for (const [id, parser] of Object.entries(parsers)) {
-    const opt = new Option(parser.name, id);
-    selectA.add(opt.cloneNode(true));
-    selectB.add(opt);
+    const option = new Option(parser.name, id);
+    selectA.add(option.cloneNode(true));
+    selectB.add(option);
   }
-  selectB.selectedIndex = 1;
+  selectB.selectedIndex = Math.min(1, selectB.options.length - 1);
 }
 
 function badge(result) {
-  return result?.value ?? "error";
+  return result && result.value !== undefined ? result.value : "error";
 }
 
-function renderResults(results, selectA, selectB, showAll) {
-  const idA = selectA.value;
-  const idB = selectB.value;
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
-  const parserA = results.parsers[idA];
-  const parserB = results.parsers[idB];
+function formatPreview(testContent, result) {
+  const lines = testContent.replace(/\n$/, "").split("\n");
+  const previewLines = lines.map(function(line) {
+    return '<span class="preview-line">' + escapeHtml(line) + '</span>';
+  });
 
+  if (result && result.error) {
+    const errorLines = result.error.split("\n").map(function(line) {
+      return '<span class="preview-line error">' + escapeHtml(line) + '</span>';
+    });
+    previewLines.push(...errorLines);
+  } else {
+    const value = result && result.value !== undefined ? String(result.value) : "";
+    previewLines.push('<span class="preview-line result">result: ' + escapeHtml(value) + '</span>');
+  }
+
+  return previewLines.join("\n");
+}
+
+function buildRows(results, idA, idB, showAll) {
+  const rows = [];
   const resultsA = results.results[idA];
   const resultsB = results.results[idB];
 
-  let rows = [];
-
   for (const test of Object.keys(results.tests)) {
-    let resA = resultsA[test];
-    let resB = resultsB[test];
+    const resA = resultsA[test];
+    const resB = resultsB[test];
 
-    const row = { test, resA: badge(resA), resB: badge(resB) };
-
-    if ("error" in resA || "error" in resB) {
-      if (showAll.checked) {
-        rows.push(row);
+    if (resA.error || resB.error) {
+      if (showAll) {
+        rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
       }
       continue;
     }
 
     if (resA.value === resB.value) {
-      if (showAll.checked) {
-        rows.push(row);
+      if (showAll) {
+        rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
       }
-        continue;
+      continue;
     }
 
-    rows.push(row);
+    rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
   }
 
-  console.log(rows);
+  return rows;
+}
 
-  document.getElementById("content").innerHTML = `
-<table>
-  <thead>
-    <tr>
-      <th>Test</th>
-      <th>${parserA.name}</th>
-      <th>${parserB.name}</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${rows.map(row => `<tr><td>${row.test}</td><td>${row.resA}</td><td>${row.resB}</td></tr>`).join("\n")}
-  </tbody>
-</table>`;
+function renderTestList(rows) {
+  const tests = document.getElementById("tests");
+  tests.disabled = false;
+  tests.innerHTML = "";
+
+  if (rows.length === 0) {
+    tests.add(new Option("No matching tests.", ""));
+    tests.disabled = true;
+    tests.size = 2;
+    return;
+  }
+
+  for (const row of rows) {
+    tests.add(new Option(row.test, row.test));
+  }
+
+  tests.size = Math.max(rows.length, 2);
+  tests.selectedIndex = 0;
+}
+
+function renderPreviews(results, selectA, selectB, selectTest) {
+  const idA = selectA.value;
+  const idB = selectB.value;
+  const parserA = results.parsers[idA];
+  const parserB = results.parsers[idB];
+  const test = selectTest.value;
+
+  document.getElementById("preview-a-title").textContent = parserA.name;
+  document.getElementById("preview-b-title").textContent = parserB.name;
+  document.getElementById("preview-a-content").innerHTML = formatPreview(results.tests[test], results.results[idA][test]);
+  document.getElementById("preview-b-content").innerHTML = formatPreview(results.tests[test], results.results[idB][test]);
+}
+
+function renderResults(results, selectA, selectB, selectTest, showAll) {
+  const idA = selectA.value;
+  const idB = selectB.value;
+  const parserA = results.parsers[idA];
+  const parserB = results.parsers[idB];
+  const rows = buildRows(results, idA, idB, showAll.checked);
+
+  if (rows.length === 0) {
+    renderTestList(rows);
+    document.getElementById("preview-a-title").textContent = parserA.name;
+    document.getElementById("preview-b-title").textContent = parserB.name;
+    document.getElementById("preview-a-content").textContent = "";
+    document.getElementById("preview-b-content").textContent = "";
+    return;
+  }
+
+  renderTestList(rows);
+  renderPreviews(results, selectA, selectB, selectTest);
 }
 
 async function init() {
   let results;
   try {
     results = await loadResults();
-  } catch (e) {
-    setError("Error loading results: " + e);
+  } catch (error) {
+    setMessage("Error loading results: " + error);
     return;
   }
 
   const selectA = document.getElementById("parser-a");
   const selectB = document.getElementById("parser-b");
   const showAll = document.getElementById("show-all");
-
-  for (const el of [selectA, selectB, showAll]) {
-    el.addEventListener("change", () => renderResults(results, selectA, selectB, showAll));
-  }
+  const selectTest = document.getElementById("tests");
 
   populateSelectOptions(results.parsers, selectA, selectB);
-  renderResults(results, selectA, selectB, showAll);
+
+  for (const element of [selectA, selectB, showAll]) {
+    element.addEventListener("change", function() {
+      renderResults(results, selectA, selectB, selectTest, showAll);
+    });
+  }
+
+  selectTest.addEventListener("change", function() {
+    renderPreviews(results, selectA, selectB, selectTest);
+  })
+
+  renderResults(results, selectA, selectB, selectTest, showAll);
 }
 
 init();
