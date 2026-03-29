@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YAML Parser Differentials</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>YAML Parser Differentials</h1>
+      <p class="subtitle">
+          A comparison of how different YAML parsers interpret the same input.
+          Based on <a href="https://0day.click/parser-diff-talk-oc25/">Joern Schneeweisz</a> and
+          <a href="https://gist.github.com/taramtrampam/fca4e599992909b48a3ba1ce69e215a2">taramtrampam</a> research.
+      </p>
+    </header>
+
+    <form class="controls">
+      <fieldset>
+        <legend>Compare parsers</legend>
+
+        <label for="parser-a">Parser A</label>
+        <select id="parser-a"></select>
+
+        <label for="parser-b">Parser B</label>
+        <select id="parser-b"></select>
+
+        <span class="count" id="count"></span>
+
+        <input type="checkbox" id="show-all">
+        <label for="show-all">Show all</label>
+      </fieldset>
+    </form>
+
+    <section id="content">
+      <div id="message">Loading results...</div>
+    </section>
+
+    <aside class="preview">
+      <div id="preview-title">
+        Select a row to preview the YAML file.
+      </div>
+      <pre id="preview-content"></pre>
+    </aside>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
