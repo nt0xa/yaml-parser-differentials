@@ -1,5 +1,4 @@
 const $ = document.querySelector.bind(document);
-const $$ = document.querySelectorAll.bind(document);
 
 class App {
   constructor() {
@@ -12,6 +11,9 @@ class App {
     this.previewBTitle = $("#preview-b-title");
     this.previewAContent = $("#preview-a-content");
     this.previewBContent = $("#preview-b-content");
+
+    this.handleRender = this.render.bind(this);
+    this.handleRenderPreviews = this.renderPreviews.bind(this);
     this.data = null;
   }
 
@@ -27,9 +29,9 @@ class App {
 
   setupEventListeners() {
     for (const el of [this.selectA, this.selectB, this.checkboxShowAll]) {
-      el.addEventListener("change", this.render.bind(this));
+      el.addEventListener("change", this.handleRender);
     }
-    this.selectTest.addEventListener("change", this.renderPreviews.bind(this));
+    this.selectTest.addEventListener("change", this.handleRenderPreviews);
   }
 
   async loadData() {
@@ -61,15 +63,27 @@ class App {
     return result && result.value !== undefined ? result.value : "error";
   }
 
+  getParser(id) {
+    return this.data.parsers[id];
+  }
+
+  getResult(parserId, testId) {
+    return this.data.results[parserId]?.[testId];
+  }
+
+  getSelectedTest() {
+    return this.selectTest.options.length > 0 ? this.selectTest.value : null;
+  }
+
   buildRows(idA, idB, showAll) {
     const rows = [];
-    const resultsA = this.data.results[idA];
-    const resultsB = this.data.results[idB];
+    const resultsA = this.data.results[idA] || {};
+    const resultsB = this.data.results[idB] || {};
 
     for (const test of Object.keys(this.data.tests)) {
       const resA = resultsA[test];
       const resB = resultsB[test];
-      const isDiff = !resA.error && !resB.error && resA.value !== resB.value;
+      const isDiff = resA && resB && !resA.error && !resB.error && resA.value !== resB.value;
       if (isDiff || showAll) {
         rows.push({ test, resA, resB, badgeA: this.badge(resA), badgeB: this.badge(resB) });
       }
@@ -105,38 +119,33 @@ class App {
   renderPreviews() {
     const idA = this.selectA.value;
     const idB = this.selectB.value;
-    const test = this.selectTest.options.length > 0 ? this.selectTest.value : null;
+    const test = this.getSelectedTest();
 
-    this.previewATitle.textContent = this.data.parsers[idA].name;
-    this.previewBTitle.textContent = this.data.parsers[idB].name;
-    if (test) {
-      this.previewAContent.replaceChildren(this.formatPreview(this.data.tests[test], this.data.results[idA][test]));
-      this.previewBContent.replaceChildren(this.formatPreview(this.data.tests[test], this.data.results[idB][test]));
-    } else {
+    this.previewATitle.textContent = this.getParser(idA).name;
+    this.previewBTitle.textContent = this.getParser(idB).name;
+
+    if (!test) {
       this.previewAContent.textContent = "";
       this.previewBContent.textContent = "";
+      return;
     }
+
+    const testContent = this.data.tests[test];
+    this.previewAContent.replaceChildren(this.formatPreview(testContent, this.getResult(idA, test)));
+    this.previewBContent.replaceChildren(this.formatPreview(testContent, this.getResult(idB, test)));
   }
 
   formatPreview(testContent, result) {
     const container = document.createDocumentFragment();
-
-    const isError = result && result.error;
-
-    const lines = isError
-      ? result.error.split("\n")
-      : testContent.replace(/\n$/, "").split("\n");
+    const hasError = Boolean(result?.error);
+    const source = hasError ? result.error : testContent.replace(/\n$/, "");
+    const lines = source.split("\n");
 
     lines.forEach(line => {
       const span = document.createElement("span");
+      const isActive = !hasError && result?.value && line.includes(result.value);
 
-      const isActive =
-        !isError &&
-        result &&
-        result.value &&
-        line.includes(result.value);
-
-      span.className = isError
+      span.className = hasError
         ? "preview-line error"
         : isActive
           ? "preview-line active"
@@ -150,9 +159,7 @@ class App {
 
     return container;
   }
-
 }
 
 const app = new App();
 app.start();
-
