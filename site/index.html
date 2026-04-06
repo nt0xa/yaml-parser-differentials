@@ -32,17 +32,21 @@
       </fieldset>
     </form>
 
-    <section id="content" class="layout">
-      <select id="tests"></select>
+    <section>
+      <p id="error"></p>
+    </section>
+
+    <section id="content">
+      <select id="tests" size="2"></select>
       <div id="previews">
-        <article class="preview">
+        <div class="preview">
           <div class="title" id="preview-a-title">Parser A</div>
-          <pre id="preview-a-content"></pre>
-        </article>
-        <article class="preview">
+          <pre class="content" id="preview-a-content"></pre>
+        </div>
+        <div class="preview">
           <div class="title" id="preview-b-title">Parser B</div>
-          <pre id="preview-b-content"></pre>
-        </article>
+          <pre class="content" id="preview-b-content"></pre>
+        </div>
       </div>
     </section>
   </main>

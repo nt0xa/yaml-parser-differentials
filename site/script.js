@@ -1,168 +1,158 @@
-function setMessage(message) {
-  const tests = document.getElementById("tests");
-  tests.innerHTML = "";
-  tests.add(new Option(message, ""));
-  tests.disabled = true;
-  tests.size = 1;
-  document.getElementById("preview-a-content").textContent = "";
-  document.getElementById("preview-b-content").textContent = "";
-}
+const $ = document.querySelector.bind(document);
+const $$ = document.querySelectorAll.bind(document);
 
-async function loadResults() {
-  const response = await fetch("results.json");
-  return await response.json();
-}
-
-function populateSelectOptions(parsers, selectA, selectB) {
-  for (const [id, parser] of Object.entries(parsers)) {
-    const option = new Option(parser.name, id);
-    selectA.add(option.cloneNode(true));
-    selectB.add(option);
-  }
-  selectB.selectedIndex = Math.min(1, selectB.options.length - 1);
-}
-
-function badge(result) {
-  return result && result.value !== undefined ? result.value : "error";
-}
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function formatPreview(testContent, result) {
-  if (result && result.error) {
-    const errorLines = result.error.split("\n").map(function(line) {
-      return '<span class="preview-line error">' + escapeHtml(line) + '</span>';
-    });
-    return errorLines.join("\n");
+class App {
+  constructor() {
+    this.selectA = $("#parser-a");
+    this.selectB = $("#parser-b");
+    this.checkboxShowAll = $("#show-all");
+    this.selectTest = $("#tests");
+    this.error = $("#error");
+    this.previewATitle = $("#preview-a-title");
+    this.previewBTitle = $("#preview-b-title");
+    this.previewAContent = $("#preview-a-content");
+    this.previewBContent = $("#preview-b-content");
+    this.data = null;
   }
 
-  const lines = testContent.replace(/\n$/, "").split("\n");
-  const previewLines = lines.map(line => {
-    if (result && result.value && line.includes(result.value)) {
-      return '<span class="preview-line active">' + escapeHtml(line) + '</span>';
+  async start() {
+    await this.loadData();
+    if (!this.data) {
+      return;
     }
-    return '<span class="preview-line">' + escapeHtml(line) + '</span>';
-  });
+    this.setupEventListeners();
+    this.populateSelectOptions();
+    this.render();
+  }
 
-  return previewLines.join("\n");
-}
+  setupEventListeners() {
+    for (const el of [this.selectA, this.selectB, this.checkboxShowAll]) {
+      el.addEventListener("change", this.render.bind(this));
+    }
+    this.selectTest.addEventListener("change", this.renderPreviews.bind(this));
+  }
 
-function buildRows(results, idA, idB, showAll) {
-  const rows = [];
-  const resultsA = results.results[idA];
-  const resultsB = results.results[idB];
-
-  for (const test of Object.keys(results.tests)) {
-    const resA = resultsA[test];
-    const resB = resultsB[test];
-
-    if (resA.error || resB.error) {
-      if (showAll) {
-        rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
+  async loadData() {
+    try {
+      const response = await fetch("results.json");
+      if (response.status !== 200) {
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
       }
-      continue;
+      this.data = await response.json();
+    } catch (e) {
+      this.setError(`Failed to load data: ${e.message}`);
     }
+  }
 
-    if (resA.value === resB.value) {
-      if (showAll) {
-        rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
+  setError(message) {
+    this.error.textContent = message;
+  }
+
+  populateSelectOptions() {
+    for (const [id, parser] of Object.entries(this.data.parsers)) {
+      const option = new Option(parser.name, id);
+      this.selectA.add(option.cloneNode(true));
+      this.selectB.add(option);
+    }
+    this.selectB.selectedIndex = Math.min(1, this.selectB.options.length - 1);
+  }
+
+  badge(result) {
+    return result && result.value !== undefined ? result.value : "error";
+  }
+
+  buildRows(idA, idB, showAll) {
+    const rows = [];
+    const resultsA = this.data.results[idA];
+    const resultsB = this.data.results[idB];
+
+    for (const test of Object.keys(this.data.tests)) {
+      const resA = resultsA[test];
+      const resB = resultsB[test];
+      const isDiff = !resA.error && !resB.error && resA.value !== resB.value;
+      if (isDiff || showAll) {
+        rows.push({ test, resA, resB, badgeA: this.badge(resA), badgeB: this.badge(resB) });
       }
-      continue;
     }
 
-    rows.push({ test, resA, resB, badgeA: badge(resA), badgeB: badge(resB) });
+    return rows;
   }
 
-  return rows;
-}
-
-function renderTestList(rows) {
-  const tests = document.getElementById("tests");
-  tests.disabled = false;
-  tests.innerHTML = "";
-
-  if (rows.length === 0) {
-    tests.add(new Option("No matching tests.", ""));
-    tests.disabled = true;
-    tests.size = 2;
-    return;
+  render() {
+    const rows = this.buildRows(this.selectA.value, this.selectB.value, this.checkboxShowAll.checked);
+    this.renderTestList(rows);
+    this.renderPreviews();
   }
 
-  for (const row of rows) {
-    tests.add(new Option(row.test, row.test));
+  renderTestList(rows) {
+    this.selectTest.disabled = false;
+    this.selectTest.innerHTML = "";
+
+    if (rows.length === 0) {
+      this.selectTest.disabled = true;
+      this.selectTest.size = 2;
+      return;
+    }
+
+    for (const row of rows) {
+      this.selectTest.add(new Option(row.test, row.test));
+    }
+
+    this.selectTest.size = Math.max(rows.length, 2);
+    this.selectTest.selectedIndex = 0;
   }
 
-  tests.size = Math.max(rows.length, 2);
-  tests.selectedIndex = 0;
-}
+  renderPreviews() {
+    const idA = this.selectA.value;
+    const idB = this.selectB.value;
+    const test = this.selectTest.options.length > 0 ? this.selectTest.value : null;
 
-function renderPreviews(results, selectA, selectB, selectTest) {
-  const idA = selectA.value;
-  const idB = selectB.value;
-  const parserA = results.parsers[idA];
-  const parserB = results.parsers[idB];
-  const test = selectTest.value;
-
-  document.getElementById("preview-a-title").textContent = parserA.name;
-  document.getElementById("preview-b-title").textContent = parserB.name;
-  document.getElementById("preview-a-content").innerHTML = formatPreview(results.tests[test], results.results[idA][test]);
-  document.getElementById("preview-b-content").innerHTML = formatPreview(results.tests[test], results.results[idB][test]);
-}
-
-function renderResults(results, selectA, selectB, selectTest, showAll) {
-  const idA = selectA.value;
-  const idB = selectB.value;
-  const parserA = results.parsers[idA];
-  const parserB = results.parsers[idB];
-  const rows = buildRows(results, idA, idB, showAll.checked);
-
-  if (rows.length === 0) {
-    renderTestList(rows);
-    document.getElementById("preview-a-title").textContent = parserA.name;
-    document.getElementById("preview-b-title").textContent = parserB.name;
-    document.getElementById("preview-a-content").textContent = "";
-    document.getElementById("preview-b-content").textContent = "";
-    return;
+    this.previewATitle.textContent = this.data.parsers[idA].name;
+    this.previewBTitle.textContent = this.data.parsers[idB].name;
+    if (test) {
+      this.previewAContent.replaceChildren(this.formatPreview(this.data.tests[test], this.data.results[idA][test]));
+      this.previewBContent.replaceChildren(this.formatPreview(this.data.tests[test], this.data.results[idB][test]));
+    } else {
+      this.previewAContent.textContent = "";
+      this.previewBContent.textContent = "";
+    }
   }
 
-  renderTestList(rows);
-  renderPreviews(results, selectA, selectB, selectTest);
-}
+  formatPreview(testContent, result) {
+    const container = document.createDocumentFragment();
 
-async function init() {
-  let results;
-  try {
-    results = await loadResults();
-  } catch (error) {
-    setMessage("Error loading results: " + error);
-    return;
-  }
+    const isError = result && result.error;
 
-  const selectA = document.getElementById("parser-a");
-  const selectB = document.getElementById("parser-b");
-  const showAll = document.getElementById("show-all");
-  const selectTest = document.getElementById("tests");
+    const lines = isError
+      ? result.error.split("\n")
+      : testContent.replace(/\n$/, "").split("\n");
 
-  populateSelectOptions(results.parsers, selectA, selectB);
+    lines.forEach(line => {
+      const span = document.createElement("span");
 
-  for (const element of [selectA, selectB, showAll]) {
-    element.addEventListener("change", function() {
-      renderResults(results, selectA, selectB, selectTest, showAll);
+      const isActive =
+        !isError &&
+        result &&
+        result.value &&
+        line.includes(result.value);
+
+      span.className = isError
+        ? "preview-line error"
+        : isActive
+          ? "preview-line active"
+          : "preview-line";
+
+      span.textContent = line;
+
+      container.appendChild(span);
+      container.appendChild(document.createTextNode("\n"));
     });
+
+    return container;
   }
 
-  selectTest.addEventListener("change", function() {
-    renderPreviews(results, selectA, selectB, selectTest);
-  })
-
-  renderResults(results, selectA, selectB, selectTest, showAll);
 }
 
-init();
+const app = new App();
+app.start();
+
