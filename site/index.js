@@ -11,6 +11,7 @@ class App {
     this.previewBTitle = $("#preview-b-title");
     this.previewAContent = $("#preview-a-content");
     this.previewBContent = $("#preview-b-content");
+    this.diffCount = $("#diff-count");
 
     this.handleRender = this.render.bind(this);
     this.handleRenderPreviews = this.renderPreviews.bind(this);
@@ -79,23 +80,34 @@ class App {
     const rows = [];
     const resultsA = this.data.results[idA] || {};
     const resultsB = this.data.results[idB] || {};
+    let diffCount = 0;
 
     for (const test of Object.keys(this.data.tests)) {
       const resA = resultsA[test];
       const resB = resultsB[test];
       const isDiff = resA && resB && !resA.error && !resB.error && resA.value !== resB.value;
+
+      if (isDiff) {
+        diffCount++;
+      }
+
       if (isDiff || showAll) {
         rows.push({ test, resA, resB, badgeA: this.badge(resA), badgeB: this.badge(resB) });
       }
     }
 
-    return rows;
+    return { rows, diffCount };
   }
 
   render() {
-    const rows = this.buildRows(this.selectA.value, this.selectB.value, this.checkboxShowAll.checked);
+    const { rows, diffCount } = this.buildRows(this.selectA.value, this.selectB.value, this.checkboxShowAll.checked);
+    this.renderDiffCount(diffCount);
     this.renderTestList(rows);
     this.renderPreviews();
+  }
+
+  renderDiffCount(diffCount) {
+    this.diffCount.textContent = `${diffCount} ${diffCount === 1 ? "difference" : "differences"}`;
   }
 
   renderTestList(rows) {

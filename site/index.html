@@ -27,8 +27,6 @@
         <label for="parser-b">Parser B</label>
         <select id="parser-b"></select>
 
-        <input type="checkbox" id="show-all">
-        <label for="show-all">Show all</label>
       </fieldset>
     </form>
 
@@ -37,7 +35,16 @@
     </section>
 
     <section id="content">
-      <select id="tests" size="2"></select>
+      <form id="cases">
+        <div id="filters">
+          <span id="diff-count"></span>
+          <label for="show-all">
+            <input type="checkbox" id="show-all">
+            Show all
+          </label>
+        </div>
+        <select id="tests" size="2"></select>
+      </form>
       <div id="previews">
         <div class="preview">
           <div class="title" id="preview-a-title">Parser A</div>
@@ -50,6 +57,6 @@
       </div>
     </section>
   </main>
-  <script src="script.js?v={VERSION}"></script>
+  <script src="index.js?v={VERSION}"></script>
 </body>
 </html>
