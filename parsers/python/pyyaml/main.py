@@ -4,8 +4,8 @@ import yaml
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("usage: yt <yaml-file> <key>", file=sys.stderr)
+    if len(sys.argv) not in (2, 3):
+        print("usage: yt <yaml-file> [key]", file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -19,6 +19,10 @@ def main():
     except Exception as e:
         print(e, file=sys.stderr)
         sys.exit(2)
+
+    if len(sys.argv) == 2:
+        print(data)
+        return
 
     key = sys.argv[2]
     if not isinstance(data, dict) or key not in data:

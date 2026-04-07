@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 require 'yaml'
 
-if ARGV.length != 2
-  $stderr.puts "usage: yt <yaml-file> <key>"
+if ARGV.length != 1 && ARGV.length != 2
+  $stderr.puts "usage: yt <yaml-file> [key]"
   exit 1
 end
 
@@ -18,6 +18,11 @@ begin
 rescue => e
   $stderr.puts e.message
   exit 2
+end
+
+if ARGV.length == 1
+  puts data
+  exit 0
 end
 
 key = ARGV[1]

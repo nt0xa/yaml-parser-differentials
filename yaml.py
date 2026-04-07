@@ -97,8 +97,7 @@ def main():
     )
 
     run.add_argument(
-        "yaml_key",
-        help="Key in YAML file to get expected value from",
+        "yaml_key", help="Key in YAML file to get expected value from", nargs="?"
     )
 
     args = root.parse_args()
@@ -146,7 +145,7 @@ def cmd_run(
     parsers: dict[str, Parser],
     parser_id: Optional[str],
     dir_or_file: str,
-    yaml_key: str,
+    yaml_key: Optional[str],
     json_output: bool,
 ):
     """Runs YAML tests using the specified parser(s). If parser_id is None, runs all parsers."""
@@ -199,7 +198,9 @@ def cmd_run(
 
 
 def run(
-    parser: Parser, yaml_file: str, yaml_key: str
+    parser: Parser,
+    yaml_file: str,
+    yaml_key: Optional[str],
 ) -> Union[ParserResult, ParserError]:
     """Runs the specified parser on the given YAML file and key."""
 
@@ -210,9 +211,13 @@ def run(
         )
         docker_build(parser.image_tag, str(parser.dir))
 
+    args = ["/file.yaml"]
+    if yaml_key is not None:
+        args.append(yaml_key)
+
     res = docker_run(
         parser.image_tag,
-        ["/file.yaml", yaml_key],
+        args,
         volumes={yaml_file: "/file.yaml"},
     )
 

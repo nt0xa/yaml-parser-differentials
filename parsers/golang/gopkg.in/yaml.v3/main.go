@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Fprintln(os.Stderr, "usage: yt <yaml-file> <key>")
+	if len(os.Args) != 2 && len(os.Args) != 3 {
+		fmt.Fprintln(os.Stderr, "usage: yt <yaml-file> [key]")
 		os.Exit(1)
 	}
 
@@ -19,13 +19,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	var data map[string]any
+	var data any
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 
-	v, ok := data[os.Args[2]]
+	if len(os.Args) == 2 {
+		fmt.Println(data)
+		return
+	}
+
+	m, ok := data.(map[string]any)
+	if !ok {
+		fmt.Println("<nil>")
+		os.Exit(0)
+	}
+
+	v, ok := m[os.Args[2]]
 	if !ok {
 		fmt.Println("<nil>")
 		os.Exit(0)

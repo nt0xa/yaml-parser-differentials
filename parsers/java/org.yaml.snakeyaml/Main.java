@@ -7,13 +7,12 @@ import java.util.Map;
 
 public final class Main {
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("usage: yt <yaml-file> <key>");
+        if (args.length != 1 && args.length != 2) {
+            System.err.println("usage: yt <yaml-file> [key]");
             System.exit(1);
         }
 
         var filePath = Path.of(args[0]);
-        var key = args[1];
 
         Object loaded;
 
@@ -30,13 +29,18 @@ public final class Main {
             return;
         }
 
-        if (!(loaded instanceof Map<?, ?> map)) {
+        if (args.length == 1) {
+            System.out.println(loaded);
+            return;
+        }
+
+        var key = args[1];
+
+        if (!(loaded instanceof Map<?, ?> map) || !map.containsKey(key)) {
             System.out.println("<nil>");
             return;
         }
 
-        var value = map.get(key);
-
-        System.out.println(value != null ? value : "<nil>");
+        System.out.println(map.get(key));
     }
 }
